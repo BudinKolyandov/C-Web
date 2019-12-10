@@ -27,6 +27,12 @@ namespace SIS.WebServer
             this.listener = new TcpListener(IPAddress.Parse(LocalhostIpAddress), port);
         }
 
+        private void Listen(Socket client)
+        {
+            var connectionHandler = new ConnectionHandler(client, this.serverRoutingTable);
+            connectionHandler.ProcessRequest();
+        }
+
         public void Run()
         {
             this.listener.Start();
@@ -41,10 +47,6 @@ namespace SIS.WebServer
             }
         }
 
-        public void Listen(Socket client)
-        {
-            var connectionHandler = new ConnectionHandler(client, this.serverRoutingTable);
-            connectionHandler.ProcessRequest();
-        }
+
     }
 }

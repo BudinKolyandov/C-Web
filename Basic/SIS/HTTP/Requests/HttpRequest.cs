@@ -38,30 +38,43 @@ namespace SIS.HTTP.Requests
 
         private void ParseRequestFormDataParameters(string requestBody)
         {
-            var parsedQueryParameterKVPs = requestBody
+            if (!string.IsNullOrEmpty(requestBody))
+            {
+                var parsedQueryParameterKVPs = requestBody
                 .Split('&')
                 .Select(queryParameter => queryParameter.Split('='))
                 .ToList();
 
-            foreach (var kvp in parsedQueryParameterKVPs)
-            {
-                if (!this.FormData.ContainsKey(kvp[0]))
+                foreach (var kvp in parsedQueryParameterKVPs)
                 {
-                    this.FormData.Add(kvp[0], new List<object>());
-                    
+                    if (!this.FormData.ContainsKey(kvp[0]))
+                    {
+                        this.FormData.Add(kvp[0], new List<object>());
+
+                    }
+                    this.FormData[kvp[0]].Add(kvp[1]);
                 }
-                this.FormData[kvp[0]].Add(kvp[1]);
-            }
+            }            
+        }
+
+        private bool HasQueryString()
+        {
+            return this.Url.Split('?').Length > 1;
         }
 
         private void ParseQueryParameters()
         {
-            this.Url.Split(new[] { '?', '#' })[1]
+            if (this.HasQueryString())
+            {
+                this.Url.Split(new[] { '?', '#' })[1]
                 .Split('&')
                 .Select(queryParameter => queryParameter.Split('='))
                 .ToList()
-                .ForEach(parsedQueryParameterKVP => 
+                .ForEach(parsedQueryParameterKVP =>
                 this.QueryData.Add(parsedQueryParameterKVP[0], parsedQueryParameterKVP[1]));
+            }
+
+            
         }
 
         private void ParseRequestParameters(string requestBody)
@@ -104,9 +117,11 @@ namespace SIS.HTTP.Requests
             this.RequestMethod = method;
         }
 
-        private bool IsValidRequestQueryString(string[] requestLine)
+        private bool IsValidRequestQueryString(string queryString, string[] queryParameters)
         {
-            throw new NotImplementedException();
+            CoreValidator.ThrowIfNullOrEmpty(queryString, nameof(queryString));
+
+            return true; // TODO RegexQueryString
         }
 
         private bool IsValidRequestLine(string[] requestLine)
