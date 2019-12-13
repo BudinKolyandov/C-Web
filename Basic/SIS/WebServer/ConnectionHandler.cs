@@ -9,6 +9,7 @@ using SIS.WebServer.Routing.Contracts;
 using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SIS.WebServer
 {
@@ -34,14 +35,14 @@ namespace SIS.WebServer
             this.client.Send(byteSegments, SocketFlags.None);
         }
 
-        public IHttpRequest ReadRequest()
+        public async Task<IHttpRequest> ReadRequest()
         {
             var result = new StringBuilder();
             var data = new ArraySegment<byte>(new byte[1024]);
 
             while (true)
             {
-                int numberOfBytesToRead = this.client.Receive(data.Array, SocketFlags.None);
+                int numberOfBytesToRead = await this.client.ReceiveAsync(data, SocketFlags.None);
 
                 if (numberOfBytesToRead == 0)
                 {
@@ -75,12 +76,12 @@ namespace SIS.WebServer
             return this.serverRoutingTable.Get(httpRequest.RequestMethod, httpRequest.Path).Invoke(httpRequest);
         }
 
-        public void ProcessRequest()
+        public async Task ProcessRequestAsync()
         {
             IHttpResponse httpResponse = null;
             try
             {
-                IHttpRequest httpRequest = this.ReadRequest();
+                var httpRequest = await this.ReadRequest();
 
                 if (httpRequest != null)
                 {
