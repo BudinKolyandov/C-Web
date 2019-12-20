@@ -1,4 +1,5 @@
 ﻿using SIS.HTTP.Common;
+using SIS.HTTP.Cookies;
 using SIS.HTTP.Enums;
 using SIS.HTTP.Exceptions;
 using SIS.HTTP.Requests;
@@ -6,6 +7,7 @@ using SIS.HTTP.Requests.Contracts;
 using SIS.HTTP.Responses.Contracts;
 using SIS.WebServer.Results;
 using SIS.WebServer.Routing.Contracts;
+using SIS.WebServer.Sessions;
 using System;
 using System.Net.Sockets;
 using System.Text;
@@ -18,7 +20,6 @@ namespace SIS.WebServer
         private readonly Socket client;
 
         private readonly IServerRoutingTable serverRoutingTable;
-
 
         public ConnectionHandler(Socket client, IServerRoutingTable serverRoutingTable)
         {
@@ -33,6 +34,33 @@ namespace SIS.WebServer
         {
             byte[] byteSegments = httpResponse.GetBytes();
             this.client.Send(byteSegments, SocketFlags.None);
+        }
+
+        private string SetRequestSession(IHttpRequest httpRequest)
+        {
+            string sessionId = null;
+
+            if (httpRequest.Cookies.ContainsCookie(HttpSessionStorage.SessionCookieKey))
+            {
+                var cookie = httpRequest.Cookies.GetCookie(HttpSessionStorage.SessionCookieKey);
+                sessionId = cookie.Value;
+                
+            }
+            else
+            {
+                sessionId = Guid.NewGuid().ToString();                
+            }
+            httpRequest.Session = HttpSessionStorage.GetSession(sessionId);
+            return httpRequest.Session.Id;
+        }
+
+        private void SetResponseSession(IHttpResponse httpResponse, string sessionId)
+        {
+            if (sessionId != null)
+            {
+                httpResponse
+                    .AddCookie(new HttpCookie(HttpSessionStorage.SessionCookieKey, sessionId));
+            }
         }
 
         public async Task<IHttpRequest> ReadRequest()
@@ -86,7 +114,9 @@ namespace SIS.WebServer
                 if (httpRequest != null)
                 {
                     Console.WriteLine($"Processing: {httpRequest.RequestMethod} {httpRequest.Path}");
+                    var sessionId = this.SetRequestSession(httpRequest);
                     httpResponse = this.HandleRequest(httpRequest);
+                    this.SetResponseSession(httpResponse, sessionId);
                 }
                 
             }

@@ -6,6 +6,7 @@ using SIS.HTTP.Exceptions;
 using SIS.HTTP.Headers;
 using SIS.HTTP.Headers.Contracts;
 using SIS.HTTP.Requests.Contracts;
+using SIS.HTTP.Sessions.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,8 @@ namespace SIS.HTTP.Requests
         public HttpRequestMethod RequestMethod { get; private set; }
 
         public IHttpCookieCollection Cookies { get; }
+
+        public IHttpSession Session { get; set; }
 
         private void ParseRequestFormDataParameters(string requestBody)
         {
@@ -90,7 +93,7 @@ namespace SIS.HTTP.Requests
 
         private void ParseRequestHeaders(string[] headersParams)
         {
-            headersParams.Select(headersParam => headersParam.Split(new[] { ':', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            headersParams.Select(headersParam => headersParam.Split(new[] { ": " }, StringSplitOptions.RemoveEmptyEntries))
                 .ToList()
                 .ForEach(headerkvp => this.Headers.AddHeader(new HttpHeader(headerkvp[0], headerkvp[1])));
         }
