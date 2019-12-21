@@ -42,7 +42,7 @@ namespace SIS.WebServer
             while (this.isRunning)
             {
                 System.Console.WriteLine("Waiting for client...");
-                var client = this.listener.AcceptSocket();
+                var client = this.listener.AcceptSocketAsync().GetAwaiter().GetResult();
                 Task.Run(() => this.Listen(client));
             }
         }

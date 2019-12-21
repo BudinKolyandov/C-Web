@@ -42,8 +42,6 @@ namespace Demo.App.Controllers
 
             HtmlResult htmlResult = new HtmlResult(viewContent, HttpResponseStatusCode.Ok);
 
-            htmlResult.Cookies.AddCookie(new HttpCookie("lang", "en"));
-
             return htmlResult;
         }
 

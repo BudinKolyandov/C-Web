@@ -11,21 +11,21 @@ namespace SIS.WebServer.Routing
 {
     public class ServerRoutingTable : IServerRoutingTable
     {
-        private readonly Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>> routes;
+        private readonly Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, IHttpResponse>>> routes;
 
         public ServerRoutingTable()
         {
-            this.routes = new Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>>
+            this.routes = new Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, IHttpResponse>>>
             {
-                [HttpRequestMethod.Get] = new Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>(),
-                [HttpRequestMethod.Post] = new Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>(),
-                [HttpRequestMethod.Put] = new Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>(),
-                [HttpRequestMethod.Delete] = new Dictionary<string, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse>>()
+                [HttpRequestMethod.Get] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>(),
+                [HttpRequestMethod.Post] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>(),
+                [HttpRequestMethod.Put] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>(),
+                [HttpRequestMethod.Delete] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>()
             };
         }
 
 
-        public void Add(HttpRequestMethod method, string path, Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse> func)
+        public void Add(HttpRequestMethod method, string path, Func<IHttpRequest, IHttpResponse> func)
         {
             CoreValidator.ThrowIfNull(method, nameof(method));
             CoreValidator.ThrowIfNullOrEmpty(path, nameof(path));
@@ -42,7 +42,7 @@ namespace SIS.WebServer.Routing
             return this.routes.ContainsKey(requestMethod) && this.routes[requestMethod].ContainsKey(path);
         }
 
-        public Func<IHttpRequest, HTTP.Responses.Contracts.IHttpResponse> Get(HttpRequestMethod requestMethod, string path)
+        public Func<IHttpRequest, IHttpResponse> Get(HttpRequestMethod requestMethod, string path)
         {
             CoreValidator.ThrowIfNull(requestMethod, nameof(requestMethod));
             CoreValidator.ThrowIfNullOrEmpty(path, nameof(path));

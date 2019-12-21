@@ -43,8 +43,7 @@ namespace SIS.WebServer
             if (httpRequest.Cookies.ContainsCookie(HttpSessionStorage.SessionCookieKey))
             {
                 var cookie = httpRequest.Cookies.GetCookie(HttpSessionStorage.SessionCookieKey);
-                sessionId = cookie.Value;
-                
+                sessionId = cookie.Value;                
             }
             else
             {

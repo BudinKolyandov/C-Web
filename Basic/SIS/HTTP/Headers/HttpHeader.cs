@@ -20,9 +20,6 @@ namespace SIS.HTTP.Headers
 
         public string Value { get; }
 
-        public override string ToString()
-        {
-            return $"{this.Key}: {this.Value}";
-        }
+        public override string ToString() => $"{this.Key}: {this.Value}";
     }
 }
