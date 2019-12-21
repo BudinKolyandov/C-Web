@@ -3,7 +3,7 @@ using SIS.HTTP.Headers;
 using SIS.HTTP.Responses;
 using System.Text;
 
-namespace SIS.WebServer.Results
+namespace SIS.WebServer.Result
 {
     public class HtmlResult : HttpResponse
     {

@@ -2,7 +2,7 @@
 using SIS.HTTP.Enums;
 using SIS.HTTP.Requests.Contracts;
 using SIS.HTTP.Responses.Contracts;
-using SIS.WebServer.Results;
+using SIS.WebServer.Result;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;

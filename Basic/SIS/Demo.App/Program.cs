@@ -4,7 +4,7 @@ using SIS.HTTP.Headers;
 using SIS.HTTP.Requests;
 using SIS.HTTP.Responses;
 using SIS.WebServer;
-using SIS.WebServer.Results;
+using SIS.WebServer.Result;
 using SIS.WebServer.Routing;
 using SIS.WebServer.Routing.Contracts;
 using System;

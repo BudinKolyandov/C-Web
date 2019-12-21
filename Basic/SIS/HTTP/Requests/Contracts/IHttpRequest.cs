@@ -12,7 +12,7 @@ namespace SIS.HTTP.Requests.Contracts
 
         string Url { get; }
 
-        Dictionary<string, List<object>> FormData { get; }
+        Dictionary<string, object> FormData { get; }
 
         Dictionary<string, object> QueryData { get; }
 

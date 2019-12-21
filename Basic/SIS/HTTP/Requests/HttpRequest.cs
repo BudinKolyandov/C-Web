@@ -19,7 +19,7 @@ namespace SIS.HTTP.Requests
         {
             CoreValidator.ThrowIfNullOrEmpty(requestString, nameof(requestString));
 
-            this.FormData = new Dictionary<string, List<object>>();
+            this.FormData = new Dictionary<string, object>();
             this.QueryData = new Dictionary<string, object>();
             this.Headers = new HttpHeaderCollection();
             this.Cookies = new HttpCookieCollection();
@@ -32,7 +32,7 @@ namespace SIS.HTTP.Requests
 
         public string Url { get; private set; }
 
-        public Dictionary<string, List<object>> FormData { get; }
+        public Dictionary<string, object> FormData { get; }
 
         public Dictionary<string, object> QueryData { get; }
 
@@ -53,14 +53,17 @@ namespace SIS.HTTP.Requests
                 .Select(queryParameter => queryParameter.Split('='))
                 .ToList();
 
-                foreach (var kvp in parsedQueryParameterKVPs)
+                foreach (var paramPair in parsedQueryParameterKVPs)
                 {
-                    if (!this.FormData.ContainsKey(kvp[0]))
-                    {
-                        this.FormData.Add(kvp[0], new List<object>());
+                    string key = paramPair[0];
+                    string value = paramPair[1];
 
+                    if (this.FormData.ContainsKey(key) == false)
+                    {
+                        this.FormData.Add(key, new HashSet<string>());
                     }
-                    this.FormData[kvp[0]].Add(kvp[1]);
+
+                    ((ISet<string>)this.FormData[key]).Add(value);
                 }
             }            
         }
@@ -175,7 +178,7 @@ namespace SIS.HTTP.Requests
             var splitRequestString = requestString
                 .Split(new[] { GlobalConstants.HttpNewLine }, StringSplitOptions.None);
 
-            var requestLine = splitRequestString[0].Trim()
+            var requestLine = splitRequestString[0]
                 .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (!this.IsValidRequestLine(requestLine))
