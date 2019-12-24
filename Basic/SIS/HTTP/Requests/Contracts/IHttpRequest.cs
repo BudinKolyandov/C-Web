@@ -9,7 +9,6 @@ namespace SIS.HTTP.Requests.Contracts
     public interface IHttpRequest
     {
         string Path { get; }
-
         string Url { get; }
 
         Dictionary<string, object> FormData { get; }
