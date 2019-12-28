@@ -49,6 +49,12 @@ namespace IRunes.App
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Albums/Details", request => new AlbumsController().Details(request));
             #endregion
 
+            #region Track Routes
+            serverRoutingTable.Add(HttpRequestMethod.Get, "/Tracks/Create", request => new TracksController().Create(request));
+            serverRoutingTable.Add(HttpRequestMethod.Post, "/Tracks/All", request => new TracksController().CreateConfirm(request));
+            serverRoutingTable.Add(HttpRequestMethod.Get, "/Tracks/Details", request => new TracksController().Details(request));
+            #endregion
+
         }
     }
 }
