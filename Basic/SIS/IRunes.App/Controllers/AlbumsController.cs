@@ -29,7 +29,7 @@ namespace IRunes.App.Controllers
                 else
                 {
                     this.ViewData["Albums"] = 
-                        string.Join("<br />",
+                        string.Join(string.Empty,
                         allAlbums.Select(album => album.ToHtmlAll())
                         .ToList());
                 }

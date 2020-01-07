@@ -18,7 +18,7 @@ namespace IRunes.App.Extensions
 
         public static string ToHtmlAll(this Album album)
         {
-            return $"<div><a href=\"/Albums/Details?id={album.Id}\">{WebUtility.UrlDecode(album.Name)}</a></div>";
+            return $"<h3><a href=\"/Albums/Details?id={album.Id}\">{WebUtility.UrlDecode(album.Name)}</a></h3>";
         }
 
         public static string ToHtmlDetails(this Album album)
