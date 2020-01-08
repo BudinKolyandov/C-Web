@@ -80,7 +80,7 @@ namespace IRunes.App.Controllers
                     return this.Redirect($"/Albums/Details?id={albumId}");
                 }
                 this.ViewData["AlbumId"] = albumId;
-                this.ViewData["Track"] = trackFromDb.ToHtmlDetails();
+                this.ViewData["Track"] = trackFromDb.ToHtmlDetails(albumId);
                 return this.View();
             }
         }

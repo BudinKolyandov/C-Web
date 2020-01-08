@@ -51,7 +51,7 @@ namespace IRunes.App
 
             #region Track Routes
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Tracks/Create", request => new TracksController().Create(request));
-            serverRoutingTable.Add(HttpRequestMethod.Post, "/Tracks/All", request => new TracksController().CreateConfirm(request));
+            serverRoutingTable.Add(HttpRequestMethod.Post, "/Tracks/Create", request => new TracksController().CreateConfirm(request));
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Tracks/Details", request => new TracksController().Details(request));
             #endregion
 
