@@ -1,10 +1,11 @@
 ﻿
 using SIS.HTTP.Requests;
 using SIS.HTTP.Responses;
+using SIS.MvcFramework;
 
 namespace IRunes.App.Controllers
 {
-    public class HomeController : BaseController
+    public class HomeController : Controller
     {
         public IHttpResponse Index(IHttpRequest request)
         {

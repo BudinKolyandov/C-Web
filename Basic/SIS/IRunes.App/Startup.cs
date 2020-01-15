@@ -1,45 +1,37 @@
 ﻿using IRunes.App.Controllers;
 using IRunes.Data;
 using SIS.HTTP.Enums;
+using SIS.HTTP.Requests;
+using SIS.HTTP.Responses;
 using SIS.MvcFramework;
 using SIS.MvcFramework.Result;
 using SIS.MvcFramework.Routing;
+using System;
 
 namespace IRunes.App
 {
-    public class Launcher
+    public class Startup : IMvcApplication
     {
-        public static void Main(string[] args)
+        public void Configure(ServerRoutingTable serverRoutingTable)
         {
             using (var context = new RunesDbContext())
             {
                 context.Database.EnsureCreated();
             }
 
-            ServerRoutingTable serverRoutingTable = new ServerRoutingTable();
-            Configure(serverRoutingTable);
-
-            Server server = new Server(8000, serverRoutingTable);
-            server.Run();
-        }
-
-        private static void Configure(ServerRoutingTable serverRoutingTable)
-        {
+            serverRoutingTable.Add(HttpRequestMethod.Get, "/Info/About", request => new InfoController().About(request));
+            
             #region Home Routes
-
             serverRoutingTable.Add(HttpRequestMethod.Get, "/", request => new RedirectResult("/Home/Index"));
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Home/Index", request => new HomeController().Index(request));
-
             #endregion
 
             #region UserRoutes
-
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Users/Login", request => new UsersController().Login(request));
             serverRoutingTable.Add(HttpRequestMethod.Post, "/Users/Login", request => new UsersController().LoginConfirm(request));
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Users/Register", request => new UsersController().Register(request));
             serverRoutingTable.Add(HttpRequestMethod.Post, "/Users/Register", request => new UsersController().RegisterConfirm(request));
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Users/Logout", request => new UsersController().Logout(request));
-
             #endregion
 
             #region Album Routes
@@ -54,7 +46,11 @@ namespace IRunes.App
             serverRoutingTable.Add(HttpRequestMethod.Post, "/Tracks/Create", request => new TracksController().CreateConfirm(request));
             serverRoutingTable.Add(HttpRequestMethod.Get, "/Tracks/Details", request => new TracksController().Details(request));
             #endregion
+        }
 
+
+        public void ConfigureServices()
+        {
         }
     }
 }
