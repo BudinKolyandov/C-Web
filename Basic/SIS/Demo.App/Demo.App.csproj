@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HTTP\SIS.HTTP.csproj" />
-    <ProjectReference Include="..\WebServer\SIS.WebServer.csproj" />
+    <ProjectReference Include="..\WebServer\SIS.MvcFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>

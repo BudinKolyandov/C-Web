@@ -1,6 +1,6 @@
 ﻿
-using SIS.HTTP.Requests.Contracts;
-using SIS.HTTP.Responses.Contracts;
+using SIS.HTTP.Requests;
+using SIS.HTTP.Responses;
 
 namespace IRunes.App.Controllers
 {

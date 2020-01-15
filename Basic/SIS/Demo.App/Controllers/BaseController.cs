@@ -1,8 +1,8 @@
 ﻿using SIS.HTTP.Cookies;
 using SIS.HTTP.Enums;
-using SIS.HTTP.Requests.Contracts;
-using SIS.HTTP.Responses.Contracts;
-using SIS.WebServer.Result;
+using SIS.HTTP.Requests;
+using SIS.HTTP.Responses;
+using SIS.MvcFramework.Result;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;

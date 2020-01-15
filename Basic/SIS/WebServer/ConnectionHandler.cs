@@ -9,13 +9,12 @@ using SIS.HTTP.Cookies;
 using SIS.HTTP.Enums;
 using SIS.HTTP.Exceptions;
 using SIS.HTTP.Requests;
-using SIS.HTTP.Requests.Contracts;
-using SIS.HTTP.Responses.Contracts;
-using SIS.WebServer.Result;
-using SIS.WebServer.Routing.Contracts;
-using SIS.WebServer.Sessions;
+using SIS.HTTP.Responses;
+using SIS.MvcFramework.Result;
+using SIS.MvcFramework.Routing;
+using SIS.MvcFramework.Sessions;
 
-namespace SIS.WebServer
+namespace SIS.MvcFramework
 {
     public class ConnectionHandler
     {
@@ -40,7 +39,7 @@ namespace SIS.WebServer
 
             while (true)
             {
-                int numberOfBytesToRead = await this.client.ReceiveAsync(data, SocketFlags.None);
+                int numberOfBytesToRead = await client.ReceiveAsync(data, SocketFlags.None);
 
                 if (numberOfBytesToRead == 0)
                 {
@@ -81,18 +80,18 @@ namespace SIS.WebServer
             else
             {
                 return new TextResult($"Route with method {httpRequest.RequestMethod} and path \"{httpRequest.Path}\" not found.", HttpResponseStatusCode.NotFound);
-            }            
+            }
         }
 
         private IHttpResponse HandleRequest(IHttpRequest httpRequest)
         {
             // EXECUTE FUNCTION FOR CURRENT REQUEST -> RETURNS RESPONSE
-            if (!this.serverRoutingTable.Contains(httpRequest.RequestMethod, httpRequest.Path))
+            if (!serverRoutingTable.Contains(httpRequest.RequestMethod, httpRequest.Path))
             {
-                return this.ReturnIfResource(httpRequest);
+                return ReturnIfResource(httpRequest);
             }
 
-            return this.serverRoutingTable.Get(httpRequest.RequestMethod, httpRequest.Path).Invoke(httpRequest);
+            return serverRoutingTable.Get(httpRequest.RequestMethod, httpRequest.Path).Invoke(httpRequest);
         }
 
         private string SetRequestSession(IHttpRequest httpRequest)
@@ -128,7 +127,7 @@ namespace SIS.WebServer
             // PREPARES RESPONSE -> MAPS IT TO BYTE DATA
             byte[] byteSegments = httpResponse.GetBytes();
 
-            this.client.Send(byteSegments, SocketFlags.None);
+            client.Send(byteSegments, SocketFlags.None);
         }
 
         public async Task ProcessRequestAsync()
@@ -136,17 +135,17 @@ namespace SIS.WebServer
             IHttpResponse httpResponse = null;
             try
             {
-                IHttpRequest httpRequest = await this.ReadRequestAsync();
+                IHttpRequest httpRequest = await ReadRequestAsync();
 
                 if (httpRequest != null)
                 {
                     Console.WriteLine($"Processing: {httpRequest.RequestMethod} {httpRequest.Path}...");
 
-                    string sessionId = this.SetRequestSession(httpRequest);
+                    string sessionId = SetRequestSession(httpRequest);
 
-                    httpResponse = this.HandleRequest(httpRequest);
+                    httpResponse = HandleRequest(httpRequest);
 
-                    this.SetResponseSession(httpResponse, sessionId);
+                    SetResponseSession(httpResponse, sessionId);
                 }
             }
             catch (BadRequestException e)
@@ -157,9 +156,9 @@ namespace SIS.WebServer
             {
                 httpResponse = new TextResult(e.Message, HttpResponseStatusCode.InternalServerError);
             }
-            this.PrepareResponse(httpResponse);
+            PrepareResponse(httpResponse);
 
-            this.client.Shutdown(SocketShutdown.Both);
+            client.Shutdown(SocketShutdown.Both);
         }
     }
 }

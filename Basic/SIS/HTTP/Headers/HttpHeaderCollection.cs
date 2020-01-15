@@ -1,5 +1,4 @@
 ﻿using SIS.HTTP.Common;
-using SIS.HTTP.Headers.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 

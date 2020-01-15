@@ -1,13 +1,11 @@
 ﻿using SIS.HTTP.Common;
 using SIS.HTTP.Enums;
-using SIS.HTTP.Requests.Contracts;
-using SIS.HTTP.Responses.Contracts;
-using SIS.WebServer.Routing.Contracts;
+using SIS.HTTP.Requests;
+using SIS.HTTP.Responses;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace SIS.WebServer.Routing
+namespace SIS.MvcFramework.Routing
 {
     public class ServerRoutingTable : IServerRoutingTable
     {
@@ -15,7 +13,7 @@ namespace SIS.WebServer.Routing
 
         public ServerRoutingTable()
         {
-            this.routes = new Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, IHttpResponse>>>
+            routes = new Dictionary<HttpRequestMethod, Dictionary<string, Func<IHttpRequest, IHttpResponse>>>
             {
                 [HttpRequestMethod.Get] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>(),
                 [HttpRequestMethod.Post] = new Dictionary<string, Func<IHttpRequest, IHttpResponse>>(),
@@ -31,7 +29,7 @@ namespace SIS.WebServer.Routing
             CoreValidator.ThrowIfNullOrEmpty(path, nameof(path));
             CoreValidator.ThrowIfNull(func, nameof(func));
 
-            this.routes[method].Add(path, func);
+            routes[method].Add(path, func);
         }
 
         public bool Contains(HttpRequestMethod requestMethod, string path)
@@ -39,7 +37,7 @@ namespace SIS.WebServer.Routing
             CoreValidator.ThrowIfNull(requestMethod, nameof(requestMethod));
             CoreValidator.ThrowIfNullOrEmpty(path, nameof(path));
 
-            return this.routes.ContainsKey(requestMethod) && this.routes[requestMethod].ContainsKey(path);
+            return routes.ContainsKey(requestMethod) && routes[requestMethod].ContainsKey(path);
         }
 
         public Func<IHttpRequest, IHttpResponse> Get(HttpRequestMethod requestMethod, string path)
@@ -47,7 +45,7 @@ namespace SIS.WebServer.Routing
             CoreValidator.ThrowIfNull(requestMethod, nameof(requestMethod));
             CoreValidator.ThrowIfNullOrEmpty(path, nameof(path));
 
-            return this.routes[requestMethod][path];
+            return routes[requestMethod][path];
         }
     }
 }
