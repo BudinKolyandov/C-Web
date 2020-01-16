@@ -3,6 +3,7 @@ using IRunes.Models;
 using SIS.HTTP.Requests;
 using SIS.HTTP.Responses;
 using SIS.MvcFramework;
+using SIS.MvcFramework.Attributes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -25,6 +26,7 @@ namespace IRunes.App.Controllers
             return this.View();
         }
 
+        [HttpPost(ActionName = "Login")]
         public IHttpResponse LoginConfirm(IHttpRequest httpRequest)
         {
             using (var context = new RunesDbContext())
@@ -49,6 +51,7 @@ namespace IRunes.App.Controllers
             return this.View();
         }
 
+        [HttpPost(ActionName = "Register")]
         public IHttpResponse RegisterConfirm(IHttpRequest httpRequest)
         {
             using (var context = new RunesDbContext())
