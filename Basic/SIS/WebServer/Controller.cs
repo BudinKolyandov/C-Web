@@ -76,9 +76,14 @@ namespace SIS.MvcFramework
             return new JsonResult(obj.ToJson());
         }
 
-        protected ActionResult FileResult()
+        protected ActionResult FileResult(byte[] fileContent)
         {
-            return null;
+            return new FileResult(fileContent);
+        }
+
+        protected ActionResult NotFound(string message = "")
+        {
+            return new NotFoundResult(message);
         }
 
     }
