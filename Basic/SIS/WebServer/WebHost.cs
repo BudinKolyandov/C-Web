@@ -64,6 +64,16 @@ namespace SIS.MvcFramework
                     {
                         var controllerInstance = Activator.CreateInstance(controller);
                         ((Controller)controllerInstance).Request = request;
+                        
+                        var controllerPrincipal = ((Controller)controllerInstance).User;
+                        var authorizeAttribute = action.GetCustomAttributes().LastOrDefault(a => a.GetType() == typeof(AuthorizeAttribute)) as AuthorizeAttribute;
+
+                        if (authorizeAttribute != null && !authorizeAttribute
+                        .IsInAuthority(controllerPrincipal))
+                        {
+                            return new RedirectResult("/Users/Login");
+                        }
+
                         var response = action.Invoke(controllerInstance, new object[0]) as ActionResult;
                         return response;
                     });

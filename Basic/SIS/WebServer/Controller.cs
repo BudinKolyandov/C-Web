@@ -16,7 +16,10 @@ namespace SIS.MvcFramework
     {
         protected Dictionary<string, object> ViewData;
 
-        protected Principal User => (Principal) this.Request.Session.GetParamenter("principal");
+        public Principal User =>
+            this.Request.Session.ContainsParameter("principal")
+            ? (Principal) this.Request.Session.GetParamenter("principal")
+            : null;
 
         public IHttpRequest Request { get; set; }
 
