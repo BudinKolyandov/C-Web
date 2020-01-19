@@ -1,8 +1,4 @@
-﻿
-using SIS.HTTP.Enums;
-using SIS.HTTP.Requests;
-using SIS.HTTP.Responses;
-using SIS.MvcFramework;
+﻿using SIS.MvcFramework;
 using SIS.MvcFramework.Attributes;
 using SIS.MvcFramework.Result;
 using System.Collections.Generic;
@@ -17,12 +13,12 @@ namespace IRunes.App.Controllers
             return base.ToString();
         }
 
-        public IHttpResponse About(IHttpRequest httpRequest)
+        public ActionResult About()
         {
             return this.View();
         }
 
-        public ActionResult Json(IHttpRequest httpRequest)
+        public ActionResult Json()
         {
             return Json(new List<object>() { 
             new
@@ -46,12 +42,12 @@ namespace IRunes.App.Controllers
             });
         }
 
-        public ActionResult File(IHttpRequest httpRequest)
+        public ActionResult File()
         {
             string folderLocation = "/../";
             string assemblyLocation = this.GetType().Assembly.Location;
             string requestedFolder = "Resources/";
-            string requesttedResourse = httpRequest.QueryData["file"].ToString();
+            string requesttedResourse = this.Request.QueryData["file"].ToString();
 
             string fullPathToResourse = assemblyLocation + folderLocation + requestedFolder + requesttedResourse;
 

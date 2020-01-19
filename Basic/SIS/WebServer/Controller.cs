@@ -2,6 +2,7 @@
 using SIS.HTTP.Requests;
 using SIS.HTTP.Responses;
 using SIS.MvcFramework.Extensions;
+using SIS.MvcFramework.Identity;
 using SIS.MvcFramework.Result;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,10 @@ namespace SIS.MvcFramework
     public abstract class Controller
     {
         protected Dictionary<string, object> ViewData;
+
+        protected Principal User => (Principal) this.Request.Session.GetParamenter("principal");
+
+        public IHttpRequest Request { get; set; }
 
         protected Controller()
         {
@@ -29,21 +34,24 @@ namespace SIS.MvcFramework
             return viewContent;
         }
 
-        protected bool IsLoggedIn(IHttpRequest request)
+        protected bool IsLoggedIn()
         {
-            return request.Session.ContainsParameter("username");
+            return this.Request.Session.ContainsParameter("principal");
         }
 
-        protected void SignIn(Guid id, string username, string email, IHttpRequest httpRequest)
+        protected void SignIn(Guid id, string username, string email)
         {
-            httpRequest.Session.AddParameter("userid", id);
-            httpRequest.Session.AddParameter("username", username);
-            httpRequest.Session.AddParameter("email", email);
+            this.Request.Session.AddParameter("principal", new Principal{
+                Id = id,
+                Username= username,
+                Email = email
+            });
+            
         }
 
-        protected void SignOut(IHttpRequest httpRequest)
+        protected void SignOut()
         {
-            httpRequest.Session.ClearParameters();
+            this.Request.Session.ClearParameters();
         }
 
         protected ActionResult View([CallerMemberName] string view = null)
