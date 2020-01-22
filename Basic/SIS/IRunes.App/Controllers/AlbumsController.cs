@@ -1,4 +1,5 @@
 ﻿using IRunes.App.Extensions;
+using SIS.MvcFramework.Mapping;
 using IRunes.Models;
 using IRunes.Services;
 using SIS.MvcFramework;
@@ -6,6 +7,7 @@ using SIS.MvcFramework.Attributes;
 using SIS.MvcFramework.Result;
 using System.Collections.Generic;
 using System.Linq;
+using IRunes.App.ViewModels;
 
 namespace IRunes.App.Controllers
 {
