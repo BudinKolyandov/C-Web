@@ -64,10 +64,15 @@ namespace SIS.MvcFramework
 
             string viewContent = File.ReadAllText("Views/" + controllerName
                 + "/" + viewName + ".html");
-
             viewContent = ParseTemplate(viewContent);
 
-            HtmlResult htmlResult = new HtmlResult(viewContent);
+            string layoutContent = File.ReadAllText("Views/_Layout.html");
+            layoutContent = ParseTemplate(layoutContent);
+            layoutContent = layoutContent.Replace("@RenderBody()", viewContent);
+
+
+
+            HtmlResult htmlResult = new HtmlResult(layoutContent);
 
             return htmlResult;
         }
