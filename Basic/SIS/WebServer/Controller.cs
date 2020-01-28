@@ -4,6 +4,7 @@ using SIS.HTTP.Responses;
 using SIS.MvcFramework.Extensions;
 using SIS.MvcFramework.Identity;
 using SIS.MvcFramework.Result;
+using SIS.MvcFramework.ViewEngine;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +15,8 @@ namespace SIS.MvcFramework
 {
     public abstract class Controller
     {
+        private IviewEngine viewEngine = new SisViewEngine();
+
         protected Dictionary<string, object> ViewData;
 
         public Principal User =>
@@ -57,20 +60,24 @@ namespace SIS.MvcFramework
             this.Request.Session.ClearParameters();
         }
 
-        protected ActionResult View([CallerMemberName] string view = null)
+        protected  ActionResult View([CallerMemberName] string view = null)
+        {
+            return this.View<object>(null, view);
+        }
+
+        protected ActionResult View<T>(T model = null, [CallerMemberName] string view = null)
+            where T : class
         {
             string controllerName = GetType().Name.Replace("Controller", string.Empty);
             string viewName = view;
 
             string viewContent = File.ReadAllText("Views/" + controllerName
                 + "/" + viewName + ".html");
-            viewContent = ParseTemplate(viewContent);
+            viewContent = this.viewEngine.GetHtml(viewContent, model);
 
             string layoutContent = File.ReadAllText("Views/_Layout.html");
-            layoutContent = ParseTemplate(layoutContent);
+            layoutContent = this.viewEngine.GetHtml(layoutContent, model);
             layoutContent = layoutContent.Replace("@RenderBody()", viewContent);
-
-
 
             HtmlResult htmlResult = new HtmlResult(layoutContent);
 
