@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SIS.MvcFramework.ViewEngine
 {
@@ -27,7 +28,6 @@ namespace AppViewCodeNamespace
         public string GetHtml()
         {{
             var html = new StringBuilder();
-            html.Append(""Hello from memory!!!"");
 
             {csharpHtmlCode}
 
@@ -96,7 +96,48 @@ namespace AppViewCodeNamespace
 
         private string GetCsharpCode(string viewContent)
         {
-            return null;
+            string[] lines = viewContent.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            var cSharpCode = new StringBuilder();
+            var supportedOperators = new[] { "for", "if", "else" };
+
+            foreach (var line in lines)
+            {
+                if (line.TrimStart().StartsWith("{") || line.TrimStart().StartsWith("}"))
+                {
+                    cSharpCode.AppendLine(line);
+                }
+                else if (supportedOperators.Any(x => line.TrimStart().StartsWith("@"+x)))
+                {
+                    var atLocation = line.IndexOf("@");
+                    var cSharpLine = line.Remove(atLocation, 1);
+                    cSharpCode.AppendLine(cSharpLine);
+                }
+                else
+                {
+                    if (!line.Contains("@"))
+                    {
+                        var cSharpLine = $"html.AppendLine(@\"{line.Replace("\"", "\"\"")});";
+                        cSharpCode.AppendLine(cSharpLine);
+                    }
+                    else
+                    {
+                        var cSharpStringToAppend = $"html.AppendLIne(@\"";
+                        while (line.Contains("@"))
+                        {
+                            var atLocation = line.IndexOf("@");
+                            var plainText = line.Substring(0, atLocation);
+                            //cSharpStringToAppend += plainText + "\" + " + ... + "@\"";
+                        }
+
+                        cSharpStringToAppend += "\");"; 
+                        cSharpCode.AppendLine(cSharpStringToAppend);
+                    }
+                }
+
+            }
+
+
+            return cSharpCode.ToString();
         }
     }
 }
