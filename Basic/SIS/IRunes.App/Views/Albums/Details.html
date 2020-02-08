@@ -21,6 +21,27 @@
 </header>
 <hr class="bg-success" style="height: 2px" />
 <main>
-    @Model.Album
+    <div class="album-details d-flex justify-content-between">
+        <div class="album-data col-md-5">
+            <img src=@Model.Cover class="img-thumbnail" width="800" height="480" />
+            <h1 class="text-center">Album Name: @Model.Name</h1>
+            <h1 class="text-center">Album Price: @Model.Price</h1>
+            <div class="d-flex justify-content-between">
+                <a class="btn bg-success text-white" href="/Tracks/Create?albumId =Model.Id">Create Track</a>
+                <a class="btn bg-success text-white" href="/Albums/All">Back To All</a>
+            </div>
+        </div>
+        <div class="album-tracks col-md-5\">
+            <h1>Tracks</h1>
+            @foreach(var track in Model.Tracks)
+            {
+            <ol>
+                <li class="font-weight-bold">
+                    <a href="/Tracks/Details?albumId=Model.Id&trackId =track.Id"><i>@track.Name</i></a>
+                </li>
+            </ol>
+            }
+        </div>
+    </div>
 </main>
 

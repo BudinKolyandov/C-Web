@@ -1,5 +1,6 @@
 ﻿using SIS.HTTP.Common;
 using SIS.MvcFramework.Routing;
+using SIS.MvcFramework.Sessions;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace SIS.MvcFramework
         public Server(int port, IServerRoutingTable serverRoutingTable)
         {
             CoreValidator.ThrowIfNull(serverRoutingTable, nameof(serverRoutingTable));
+
             this.port = port;
             this.serverRoutingTable = serverRoutingTable;
 
@@ -29,7 +31,7 @@ namespace SIS.MvcFramework
 
         private async Task Listen(Socket client)
         {
-            var connectionHandler = new ConnectionHandler(client, serverRoutingTable);
+            var connectionHandler = new ConnectionHandler(client, this.serverRoutingTable);
             await connectionHandler.ProcessRequestAsync();
         }
 

@@ -14,6 +14,9 @@ namespace SIS.MvcFramework.Sessions
             return sessions.GetOrAdd(id, _ => new HttpSession(id));
         }
 
-
+        public bool ContainsSession(string id)
+        {
+            return sessions.ContainsKey(id);
+        }
     }
 }

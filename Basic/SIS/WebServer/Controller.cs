@@ -15,9 +15,12 @@ namespace SIS.MvcFramework
 {
     public abstract class Controller
     {
-        private IviewEngine viewEngine = new SisViewEngine();
+        private readonly IviewEngine viewEngine;
 
-        protected Dictionary<string, object> ViewData;
+        protected Controller()
+        {
+            this.viewEngine = new SisViewEngine();
+        }
 
         public Principal User =>
             this.Request.Session.ContainsParameter("principal")
@@ -25,21 +28,7 @@ namespace SIS.MvcFramework
             : null;
 
         public IHttpRequest Request { get; set; }
-
-        protected Controller()
-        {
-            ViewData = new Dictionary<string, object>();
-        }
-
-        private string ParseTemplate(string viewContent)
-        {
-            foreach (var param in ViewData)
-            {
-                viewContent = viewContent.Replace($"@Model.{param.Key}", param.Value.ToString());
-            }
-            return viewContent;
-        }
-
+        
         protected bool IsLoggedIn()
         {
             return this.Request.Session.ContainsParameter("principal");
