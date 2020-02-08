@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SIS.MvcFramework.ViewEngine
 {
@@ -25,8 +26,9 @@ namespace AppViewCodeNamespace
 {{
     public class AppViewCode : IView
     {{
-        public string GetHtml()
+        public string GetHtml(object model)
         {{
+            var Model = model as {model.GetType().FullName};
             var html = new StringBuilder();
 
             {csharpHtmlCode}
@@ -37,19 +39,21 @@ namespace AppViewCodeNamespace
 }}
 ";
 
-            var view = CompileAndInstance(code);
-            var htmlResult = view?.GetHtml();
+            var view = CompileAndInstance(code, model.GetType().Assembly);
+            var htmlResult = view?.GetHtml(model);
             return htmlResult;
         }
 
-        private IView CompileAndInstance(string code)
+        private IView CompileAndInstance(string code, Assembly modelAssembly)
         {
             var compilation = CSharpCompilation.Create("AppViewAssembly")
                 .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(MetadataReference
                 .CreateFromFile(typeof(object).Assembly.Location))
                 .AddReferences(MetadataReference
-                .CreateFromFile(typeof(IView).Assembly.Location));
+                .CreateFromFile(typeof(IView).Assembly.Location))
+                .AddReferences(MetadataReference
+                .CreateFromFile(modelAssembly.Location));
 
             var netStandardAssembly = Assembly.Load(new AssemblyName("netstandard")).GetReferencedAssemblies();
 
@@ -116,20 +120,32 @@ namespace AppViewCodeNamespace
                 {
                     if (!line.Contains("@"))
                     {
-                        var cSharpLine = $"html.AppendLine(@\"{line.Replace("\"", "\"\"")});";
+                        var cSharpLine = $"html.AppendLine(@\"{line.Replace("\"", "\"\"")}\");";
                         cSharpCode.AppendLine(cSharpLine);
                     }
                     else
                     {
-                        var cSharpStringToAppend = $"html.AppendLIne(@\"";
-                        while (line.Contains("@"))
+                        var cSharpStringToAppend = $"html.AppendLine(@\"";
+                        var restOfLine = line;
+                        while (restOfLine.Contains("@"))
                         {
-                            var atLocation = line.IndexOf("@");
-                            var plainText = line.Substring(0, atLocation);
-                            //cSharpStringToAppend += plainText + "\" + " + ... + "@\"";
+                            var atLocation = restOfLine.IndexOf("@");
+                            var plainText = restOfLine.Substring(0, atLocation);
+                            Regex csharpCodeRegex = new Regex(@"[^\s<""]+", RegexOptions.Compiled);
+                            var csharpExpression = csharpCodeRegex.Match(restOfLine.Substring(atLocation + 1))?.Value;
+
+                            cSharpStringToAppend += plainText + "\" + " + csharpExpression + " + @\"";
+                            if (restOfLine.Length <= atLocation + csharpExpression.Length + 1)
+                            {
+                                restOfLine = string.Empty;
+                            }
+                            else
+                            {
+                                restOfLine = restOfLine.Substring(atLocation + csharpExpression.Length + 1);
+                            }
                         }
 
-                        cSharpStringToAppend += "\");"; 
+                        cSharpStringToAppend += $"{restOfLine}\");"; 
                         cSharpCode.AppendLine(cSharpStringToAppend);
                     }
                 }
