@@ -1,4 +1,5 @@
 ﻿using IRunes.App.Extensions;
+using IRunes.App.ViewModels;
 using IRunes.Models;
 using IRunes.Services;
 using SIS.MvcFramework;
@@ -27,8 +28,7 @@ namespace IRunes.App.Controllers
         {
             string albumId = this.Request.QueryData["albumId"].ToString();
 
-            //this.ViewData["AlbumId"] = albumId;
-            return this.View();
+            return this.View(new TrackCreateViewModel { Id = albumId} );
         }
 
         [Authorize]

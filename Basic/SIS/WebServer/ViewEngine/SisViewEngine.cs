@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -61,20 +62,18 @@ namespace AppViewCodeNamespace
 
             var compilation = CSharpCompilation.Create("AppViewAssembly")
                 .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(MetadataReference
-                .CreateFromFile(typeof(object).Assembly.Location))
-                .AddReferences(MetadataReference
-                .CreateFromFile(typeof(IView).Assembly.Location))
-                .AddReferences(MetadataReference
-                .CreateFromFile(Assembly.GetEntryAssembly().Location))
-                .AddReferences(MetadataReference
-                .CreateFromFile(modelAssembly.Location));
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(Object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(IView).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(Assembly.GetEntryAssembly().Location))
+                .AddReferences(MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("netstandard")).Location))
+                .AddReferences(MetadataReference.CreateFromFile(modelAssembly.Location));
 
             var netStandardAssembly = Assembly.Load(new AssemblyName("netstandard")).GetReferencedAssemblies();
-
             foreach (var assembly in netStandardAssembly)
             {
-                compilation = compilation.AddReferences(MetadataReference.CreateFromFile(Assembly.Load(assembly).Location));
+                compilation = compilation.AddReferences(
+                    MetadataReference.CreateFromFile(Assembly.Load(assembly).Location));
             }
 
             compilation = compilation.AddSyntaxTrees(SyntaxFactory.ParseSyntaxTree(code));
@@ -84,12 +83,18 @@ namespace AppViewCodeNamespace
                 var compilationResult = compilation.Emit(memoryStream);
                 if (!compilationResult.Success)
                 {
-                foreach (var error in compilationResult.Diagnostics)
+                    var errors = compilationResult.Diagnostics.Where(x => x.Severity == DiagnosticSeverity.Error);
+                    var errorsHtml = new StringBuilder();
+                    errorsHtml.AppendLine($"<h1 class=\"text-danger\">{errors.Count()} errors:</h1>");
+                    foreach (var error in errors)
                     {
-                        Console.WriteLine(error.GetMessage());
+                        errorsHtml.AppendLine($"<div class=\"text-danger\">{error.Location} => {error.GetMessage()}</div class=\"text-danger\">");
                     }
-                    return null;
+
+                    errorsHtml.AppendLine($"<pre>{WebUtility.HtmlEncode(code)}</pre>");
+                    return new ErrorView(errorsHtml.ToString());
                 }
+
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 var assemblyBytes = memoryStream.ToArray();
                 var assembly = Assembly.Load(assemblyBytes);
@@ -97,83 +102,110 @@ namespace AppViewCodeNamespace
                 var type = assembly.GetType("AppViewCodeNamespace.AppViewCode");
                 if (type == null)
                 {
-                    Console.WriteLine("AppViewCore not found!");
+                    Console.WriteLine("AppViewCode not found.");
                     return null;
                 }
 
                 var instance = Activator.CreateInstance(type);
-                if (instance == null)
-                {
-                    Console.WriteLine("AppViewCore can't be instanciated!");
-                    return null;
-                }
-
                 return instance as IView;
             }
-            
         }
 
         private string GetCsharpCode(string viewContent)
         {
-            string[] lines = viewContent.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-            var cSharpCode = new StringBuilder();
+            
+            var lines = viewContent.Split(new string[] { "\r\n", "\n\r", "\n" }, StringSplitOptions.None);
+            var csharpCode = new StringBuilder();
             var supportedOperators = new[] { "for", "if", "else" };
+            var csharpCodeRegex = new Regex(@"[^\s<""\&]+", RegexOptions.Compiled);
+            var csharpCodeDepth = 0; // If > 0, Inside CSharp Syntax
 
             foreach (var line in lines)
             {
-                if (line.TrimStart().StartsWith("{") || line.TrimStart().StartsWith("}"))
+                string currentLine = line;
+
+                if (currentLine.TrimStart().StartsWith("@{"))
                 {
-                    cSharpCode.AppendLine(line);
+                    csharpCodeDepth++;
                 }
-                else if (supportedOperators.Any(x => line.TrimStart().StartsWith("@"+x)))
+                else if (currentLine.TrimStart().StartsWith("{") || currentLine.TrimStart().StartsWith("}"))
                 {
-                    var atLocation = line.IndexOf("@");
-                    var cSharpLine = line.Remove(atLocation, 1);
-                    cSharpCode.AppendLine(cSharpLine);
+                    if (csharpCodeDepth > 0)
+                    {
+                        if (currentLine.TrimStart().StartsWith("{"))
+                        {
+                            csharpCodeDepth++;
+                        }
+                        else if (currentLine.TrimStart().StartsWith("}"))
+                        {
+                            if ((--csharpCodeDepth) == 0)
+                            {
+                                continue;
+                            }
+                        }
+                    }
+
+                    csharpCode.AppendLine(currentLine);
+                }
+                else if (csharpCodeDepth > 0)
+                {
+                    csharpCode.AppendLine(currentLine);
+                    continue;
+                }
+                else if (supportedOperators.Any(x => currentLine.TrimStart().StartsWith("@" + x)))
+                {
+                    var atSignLocation = currentLine.IndexOf("@");
+                    var csharpLine = currentLine.Remove(atSignLocation, 1);
+                    csharpCode.AppendLine(csharpLine);
                 }
                 else
                 {
-                    if (!line.Contains("@"))
+                    if (currentLine.Contains("@RenderBody()"))
                     {
-                        var cSharpLine = $"html.AppendLine(@\"{line.Replace("\"", "\"\"")}\");";
-                        cSharpCode.AppendLine(cSharpLine);
-                    }
-                    else if (line.Contains("@RenderBody()"))
-                    {
-                        var csharpLine = $"html.AppendLine(@\"{line}\");";
-                        cSharpCode.AppendLine(csharpLine);
+                        var csharpLine = $"html.AppendLine(@\"{currentLine}\");";
+                        csharpCode.AppendLine(csharpLine);
                     }
                     else
                     {
-                        var cSharpStringToAppend = $"html.AppendLine(@\"";
-                        var restOfLine = line;
+                        var csharpStringToAppend = "html.AppendLine(@\"";
+                        var restOfLine = currentLine;
                         while (restOfLine.Contains("@"))
                         {
-                            var atLocation = restOfLine.IndexOf("@");
-                            var plainText = restOfLine.Substring(0, atLocation);
-                            Regex csharpCodeRegex = new Regex(@"[^\s<""]+", RegexOptions.Compiled);
-                            var csharpExpression = csharpCodeRegex.Match(restOfLine.Substring(atLocation + 1))?.Value;
+                            var atSignLocation = restOfLine.IndexOf("@");
+                            var plainText = restOfLine.Substring(0, atSignLocation).Replace("\"", "\"\"");
+                            var csharpExpression = csharpCodeRegex.Match(restOfLine.Substring(atSignLocation + 1))?.Value;
 
-                            cSharpStringToAppend += plainText.Replace("\"", "\"\"") + "\" + " + csharpExpression + " + @\"";
-                            if (restOfLine.Length <= atLocation + csharpExpression.Length + 1)
+                            if (csharpExpression.Contains("{") && csharpExpression.Contains("}"))
+                            {
+                                var csharpInlineExpression =
+                                    csharpExpression.Substring(1, csharpExpression.IndexOf("}") - 1);
+
+                                csharpStringToAppend += plainText + "\" + " + csharpInlineExpression + " + @\"";
+
+                                csharpExpression = csharpExpression.Substring(0, csharpExpression.IndexOf("}") + 1);
+                            }
+                            else
+                            {
+                                csharpStringToAppend += plainText + "\" + " + csharpExpression + " + @\"";
+                            }
+
+                            if (restOfLine.Length <= atSignLocation + csharpExpression.Length + 1)
                             {
                                 restOfLine = string.Empty;
                             }
                             else
                             {
-                                restOfLine = restOfLine.Substring(atLocation + csharpExpression.Length + 1);
+                                restOfLine = restOfLine.Substring(atSignLocation + csharpExpression.Length + 1);
                             }
                         }
 
-                        cSharpStringToAppend += $"{restOfLine.Replace("\"", "\"\"")}\");"; 
-                        cSharpCode.AppendLine(cSharpStringToAppend);
+                        csharpStringToAppend += $"{restOfLine.Replace("\"", "\"\"")}\");";
+                        csharpCode.AppendLine(csharpStringToAppend);
                     }
                 }
-
             }
 
-
-            return cSharpCode.ToString();
+            return csharpCode.ToString();
         }
     }
 }
