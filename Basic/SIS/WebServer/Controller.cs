@@ -1,47 +1,46 @@
-﻿using SIS.HTTP.Enums;
+﻿using System.Runtime.CompilerServices;
 using SIS.HTTP.Requests;
-using SIS.HTTP.Responses;
 using SIS.MvcFramework.Extensions;
 using SIS.MvcFramework.Identity;
 using SIS.MvcFramework.Result;
 using SIS.MvcFramework.ViewEngine;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
 
 namespace SIS.MvcFramework
 {
+    using Validation;
+
     public abstract class Controller
     {
-        private readonly IviewEngine viewEngine;
+        private readonly IViewEngine viewEngine;
 
         protected Controller()
         {
             this.viewEngine = new SisViewEngine();
+            this.ModelState = new ModelStateDictionary();
         }
 
         public Principal User =>
             this.Request.Session.ContainsParameter("principal")
-            ? (Principal) this.Request.Session.GetParamenter("principal")
+            ? (Principal)this.Request.Session.GetParameter("principal")
             : null;
 
         public IHttpRequest Request { get; set; }
-        
+
+        public ModelStateDictionary ModelState { get; set; }
+
         protected bool IsLoggedIn()
         {
             return this.Request.Session.ContainsParameter("principal");
         }
 
-        protected void SignIn(Guid id, string username, string email)
+        protected void SignIn(string id, string username, string email)
         {
-            this.Request.Session.AddParameter("principal", new Principal{
+            this.Request.Session.AddParameter("principal", new Principal
+            {
                 Id = id,
-                Username= username,
+                Username = username,
                 Email = email
             });
-            
         }
 
         protected void SignOut()
@@ -49,7 +48,7 @@ namespace SIS.MvcFramework
             this.Request.Session.ClearParameters();
         }
 
-        protected  ActionResult View([CallerMemberName] string view = null)
+        protected ActionResult View([CallerMemberName] string view = null)
         {
             return this.View<object>(null, view);
         }
@@ -57,19 +56,17 @@ namespace SIS.MvcFramework
         protected ActionResult View<T>(T model = null, [CallerMemberName] string view = null)
             where T : class
         {
-            string controllerName = GetType().Name.Replace("Controller", string.Empty);
+            string controllerName = this.GetType().Name.Replace("Controller", string.Empty);
             string viewName = view;
 
-            string viewContent = File.ReadAllText("Views/" + controllerName
-                + "/" + viewName + ".html");
-            viewContent = this.viewEngine.GetHtml(viewContent, model);
+            string viewContent = System.IO.File.ReadAllText("Views/" + controllerName + "/" + viewName + ".html");
+            viewContent = this.viewEngine.GetHtml(viewContent, model, this.ModelState, this.User);
 
-            string layoutContent = File.ReadAllText("Views/_Layout.html");
-            layoutContent = this.viewEngine.GetHtml(layoutContent, model);
+            string layoutContent = System.IO.File.ReadAllText("Views/_Layout.html");
+            layoutContent = this.viewEngine.GetHtml(layoutContent, model, this.ModelState, this.User);
             layoutContent = layoutContent.Replace("@RenderBody()", viewContent);
 
-            HtmlResult htmlResult = new HtmlResult(layoutContent);
-
+            var htmlResult = new HtmlResult(layoutContent);
             return htmlResult;
         }
 
@@ -88,7 +85,7 @@ namespace SIS.MvcFramework
             return new JsonResult(obj.ToJson());
         }
 
-        protected ActionResult FileResult(byte[] fileContent)
+        protected ActionResult File(byte[] fileContent)
         {
             return new FileResult(fileContent);
         }
@@ -97,6 +94,5 @@ namespace SIS.MvcFramework
         {
             return new NotFoundResult(message);
         }
-
     }
 }

@@ -27,7 +27,7 @@ namespace IRunes.App.Extensions
             return null;
         }
 
-        public static string ToHtmlAll(this Track track, Guid albumId, int index)
+        public static string ToHtmlAll(this Track track, string albumId, int index)
         {
             return $"<li><strong>{index}</strong>. <a href=\"/Tracks/Details?albumId={albumId}&trackId={track.Id}\"><i>{WebUtility.UrlDecode(track.Name)}</i></a></li>";
         }

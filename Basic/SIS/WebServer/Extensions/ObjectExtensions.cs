@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System.IO;
+﻿using System.IO;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace SIS.MvcFramework.Extensions
 {
@@ -12,15 +12,14 @@ namespace SIS.MvcFramework.Extensions
             using (var stringWriter = new StringWriter())
             {
                 var serializer = new XmlSerializer(obj.GetType());
-                XmlSerializerNamespaces namespaces = new XmlSerializerNamespaces();
-                serializer.Serialize(stringWriter, obj, namespaces);
+                serializer.Serialize(stringWriter, obj);
                 return stringWriter.ToString();
-            }
+            };
         }
 
         public static string ToJson(this object obj)
         {
-            return JsonConvert.SerializeObject(obj, Formatting.Indented, new JsonSerializerSettings
+            return JsonConvert.SerializeObject(obj, new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });

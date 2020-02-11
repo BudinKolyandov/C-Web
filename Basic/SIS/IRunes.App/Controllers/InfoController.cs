@@ -1,5 +1,6 @@
 ﻿using SIS.MvcFramework;
 using SIS.MvcFramework.Attributes;
+using SIS.MvcFramework.Attributes.Action;
 using SIS.MvcFramework.Result;
 using System.Collections.Generic;
 
@@ -54,7 +55,7 @@ namespace IRunes.App.Controllers
             if (System.IO.File.Exists(fullPathToResourse))
             {
                 byte[] content = System.IO.File.ReadAllBytes(fullPathToResourse);
-                return FileResult(content);
+                return new FileResult(content);
             }
 
             return NotFound();

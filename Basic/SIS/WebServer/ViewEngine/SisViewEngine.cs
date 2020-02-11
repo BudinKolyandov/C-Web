@@ -4,121 +4,98 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using SIS.MvcFramework.Identity;
+using System.Net;
 
 namespace SIS.MvcFramework.ViewEngine
 {
-    public class SisViewEngine : IviewEngine
+    using Validation;
+
+    public class SisViewEngine : IViewEngine
     {
+        public object WebUtilitycode { get; private set; }
+
         private string GetModelType<T>(T model)
         {
             if (model is IEnumerable)
             {
                 return $"IEnumerable<{model.GetType().GetGenericArguments()[0].FullName}>";
             }
+
             return model.GetType().FullName;
         }
 
-
-        public string GetHtml<T>(string viewContent, T model)
+        public string GetHtml<T>(string viewContent, T model, ModelStateDictionary modelState, Principal user = null)
         {
-            string csharpHtmlCode = GetCsharpCode(viewContent);
-
+            string csharpHtmlCode = string.Empty;
+            csharpHtmlCode = this.CheckForWidgets(viewContent);
+            csharpHtmlCode = this.GetCSharpCode(csharpHtmlCode);
             string code = $@"
 using System;
+using System.Net;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using SIS.MvcFramework.ViewEngine;
-
+using SIS.MvcFramework.Identity;
+using SIS.MvcFramework.Validation;
 namespace AppViewCodeNamespace
 {{
     public class AppViewCode : IView
     {{
-        public string GetHtml(object model)
+        public string GetHtml(object model, ModelStateDictionary modelState, Principal user)
         {{
             var Model = {(model == null ? "new {}" : "model as " + GetModelType(model))};
-            var html = new StringBuilder();
+            var User = user;           
+            var ModelState= modelState;
+
+	        var html = new StringBuilder();
 
             {csharpHtmlCode}
-
-            return html.ToString();
+            
+	        return html.ToString();
         }}
     }}
-}}
-";
-
-            var view = CompileAndInstance(code, model?.GetType().Assembly);
-            var htmlResult = view?.GetHtml(model);
+}}";
+            var view = this.CompileAndInstance(code, model?.GetType().Assembly);
+            var htmlResult = view?.GetHtml(model, modelState, user);
             return htmlResult;
         }
 
-        private IView CompileAndInstance(string code, Assembly modelAssembly)
+        private string CheckForWidgets(string viewContent)
         {
-            modelAssembly = modelAssembly ?? Assembly.GetEntryAssembly();
+            var widgets = Assembly
+                .GetEntryAssembly()?
+                .GetTypes()
+                .Where(type => typeof(IViewWidget).IsAssignableFrom(type))
+                .Select(x => (IViewWidget)Activator.CreateInstance(x))
+                .ToList();
 
-            var compilation = CSharpCompilation.Create("AppViewAssembly")
-                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(Object).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(IView).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(Assembly.GetEntryAssembly().Location))
-                .AddReferences(MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("netstandard")).Location))
-                .AddReferences(MetadataReference.CreateFromFile(modelAssembly.Location));
-
-            var netStandardAssembly = Assembly.Load(new AssemblyName("netstandard")).GetReferencedAssemblies();
-            foreach (var assembly in netStandardAssembly)
+            if (widgets == null || widgets.Count == 0)
             {
-                compilation = compilation.AddReferences(
-                    MetadataReference.CreateFromFile(Assembly.Load(assembly).Location));
+                return viewContent;
             }
 
-            compilation = compilation.AddSyntaxTrees(SyntaxFactory.ParseSyntaxTree(code));
+            string widgetPrefix = "@Widgets.";
 
-            using (var memoryStream = new MemoryStream())
+            foreach (var viewWidget in widgets)
             {
-                var compilationResult = compilation.Emit(memoryStream);
-                if (!compilationResult.Success)
-                {
-                    var errors = compilationResult.Diagnostics.Where(x => x.Severity == DiagnosticSeverity.Error);
-                    var errorsHtml = new StringBuilder();
-                    errorsHtml.AppendLine($"<h1 class=\"text-danger\">{errors.Count()} errors:</h1>");
-                    foreach (var error in errors)
-                    {
-                        errorsHtml.AppendLine($"<div class=\"text-danger\">{error.Location} => {error.GetMessage()}</div class=\"text-danger\">");
-                    }
-
-                    errorsHtml.AppendLine($"<pre>{WebUtility.HtmlEncode(code)}</pre>");
-                    return new ErrorView(errorsHtml.ToString());
-                }
-
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                var assemblyBytes = memoryStream.ToArray();
-                var assembly = Assembly.Load(assemblyBytes);
-
-                var type = assembly.GetType("AppViewCodeNamespace.AppViewCode");
-                if (type == null)
-                {
-                    Console.WriteLine("AppViewCode not found.");
-                    return null;
-                }
-
-                var instance = Activator.CreateInstance(type);
-                return instance as IView;
+                viewContent = viewContent.Replace($"{widgetPrefix}{viewWidget.GetType().Name}", viewWidget.Render());
             }
+
+            return viewContent;
         }
 
-        private string GetCsharpCode(string viewContent)
+        private string GetCSharpCode(string viewContent)
         {
-            
             var lines = viewContent.Split(new string[] { "\r\n", "\n\r", "\n" }, StringSplitOptions.None);
             var csharpCode = new StringBuilder();
             var supportedOperators = new[] { "for", "if", "else" };
             var csharpCodeRegex = new Regex(@"[^\s<""\&]+", RegexOptions.Compiled);
-            var csharpCodeDepth = 0; // If > 0, Inside CSharp Syntax
+            var csharpCodeDepth = 0;
 
             foreach (var line in lines)
             {
@@ -206,6 +183,61 @@ namespace AppViewCodeNamespace
             }
 
             return csharpCode.ToString();
+        }
+
+        private IView CompileAndInstance(string code, Assembly modelAssembly)
+        {
+            modelAssembly = modelAssembly ?? Assembly.GetEntryAssembly();
+
+            var compilation = CSharpCompilation.Create("AppViewAssembly")
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(Object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(IView).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(Assembly.GetEntryAssembly().Location))
+                .AddReferences(MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("netstandard")).Location))
+                .AddReferences(MetadataReference.CreateFromFile(modelAssembly.Location));
+
+            var netStandardAssembly = Assembly.Load(new AssemblyName("netstandard")).GetReferencedAssemblies();
+            foreach (var assembly in netStandardAssembly)
+            {
+                compilation = compilation.AddReferences(
+                    MetadataReference.CreateFromFile(Assembly.Load(assembly).Location));
+            }
+
+            compilation = compilation.AddSyntaxTrees(SyntaxFactory.ParseSyntaxTree(code));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                var compilationResult = compilation.Emit(memoryStream);
+                if (!compilationResult.Success)
+                {
+                    var errors = compilationResult.Diagnostics.Where(x => x.Severity == DiagnosticSeverity.Error);
+                    var errorsHtml = new StringBuilder();
+                    errorsHtml.AppendLine($"<h1 class=\"text-danger\">{errors.Count()} errors:</h1>");
+                    foreach (var error in errors)
+                    {
+                        errorsHtml.AppendLine($"<div class=\"text-danger\">{error.Location} => {error.GetMessage()}</div class=\"text-danger\">");
+                    }
+
+                    errorsHtml.AppendLine($"<pre>{WebUtility.HtmlEncode(code)}</pre>");
+                    return new ErrorView(errorsHtml.ToString());
+                }
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                var assemblyBytes = memoryStream.ToArray();
+                var assembly = Assembly.Load(assemblyBytes);
+
+                var type = assembly.GetType("AppViewCodeNamespace.AppViewCode");
+                if (type == null)
+                {
+                    Console.WriteLine("AppViewCode not found.");
+                    return null;
+                }
+
+                var instance = Activator.CreateInstance(type);
+                return instance as IView;
+            }
         }
     }
 }

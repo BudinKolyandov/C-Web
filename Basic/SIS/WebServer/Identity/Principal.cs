@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SIS.MvcFramework.Identity
 {
@@ -10,7 +9,7 @@ namespace SIS.MvcFramework.Identity
             this.Roles = new List<string>();
         }
 
-        public Guid Id { get; set; }
+        public string Id { get; set; }
 
         public string Username { get; set; }
 

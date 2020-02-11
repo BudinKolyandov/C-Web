@@ -1,4 +1,5 @@
-﻿using SIS.HTTP.Common;
+﻿using SIS.Common;
+using SIS.HTTP.Common;
 
 namespace SIS.HTTP.Headers
 {
@@ -6,7 +7,7 @@ namespace SIS.HTTP.Headers
     {
         public const string Cookie = "Cookie";
 
-        public const string ContentType = "ContentType";
+        public const string ContentType = "Content-Type";
 
         public const string ContentLength = "Content-Length";
 
@@ -14,13 +15,11 @@ namespace SIS.HTTP.Headers
 
         public HttpHeader(string key, string value)
         {
-            CoreValidator.ThrowIfNullOrEmpty(key, nameof(key));
-            CoreValidator.ThrowIfNullOrEmpty(value, nameof(value));
-
+            key.ThrowIfNullOrEmpty(nameof(key));
+            value.ThrowIfNullOrEmpty(nameof(value));
             this.Key = key;
             this.Value = value;
         }
-
 
         public string Key { get; }
 

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace SIS.MvcFramework.Mapping
+﻿namespace SIS.MvcFramework.Mapping
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     public static class MappingExtensions
     {
         public static IEnumerable<TDestination> To<TDestination>(this IEnumerable<object> collection)
@@ -12,5 +12,9 @@ namespace SIS.MvcFramework.Mapping
                 .ToList();
         }
 
+        public static TDestination To<TDestination>(this object obj)
+        {
+            return ModelMapper.ProjectTo<TDestination>(obj);
+        }
     }
 }

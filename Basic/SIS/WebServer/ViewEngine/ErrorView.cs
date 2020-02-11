@@ -5,6 +5,7 @@ using SIS.MvcFramework.Identity;
 
 namespace SIS.MvcFramework.ViewEngine
 {
+    using Validation;
 
     public class ErrorView : IView
     {
@@ -15,7 +16,7 @@ namespace SIS.MvcFramework.ViewEngine
             this.errors = errors;
         }
 
-        public string GetHtml(object model)
+        public string GetHtml(object model, ModelStateDictionary modelState, Principal user)
         {
             return errors;
         }

@@ -1,5 +1,4 @@
-﻿using IRunes.App.Extensions;
-using SIS.MvcFramework.Mapping;
+﻿using SIS.MvcFramework.Mapping;
 using IRunes.Models;
 using IRunes.Services;
 using SIS.MvcFramework;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IRunes.App.ViewModels;
 using System;
+using SIS.MvcFramework.Attributes.Security;
 
 namespace IRunes.App.Controllers
 {
@@ -48,6 +48,7 @@ namespace IRunes.App.Controllers
 
             Album album = new Album
             {
+                Id = new Guid().ToString(),
                 Name = name,
                 Cover = cover,
                 Price = 0M

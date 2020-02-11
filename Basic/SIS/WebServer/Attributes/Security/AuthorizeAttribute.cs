@@ -1,7 +1,7 @@
 ﻿using SIS.MvcFramework.Identity;
 using System;
 
-namespace SIS.MvcFramework.Attributes
+namespace SIS.MvcFramework.Attributes.Security
 {
     public class AuthorizeAttribute : Attribute
     {

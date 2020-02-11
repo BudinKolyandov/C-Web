@@ -1,6 +1,6 @@
-﻿using SIS.HTTP.Enums;
+﻿using System.Text;
+using SIS.HTTP.Enums;
 using SIS.HTTP.Headers;
-using System.Text;
 
 namespace SIS.MvcFramework.Result
 {
@@ -9,9 +9,8 @@ namespace SIS.MvcFramework.Result
         public HtmlResult(string content, HttpResponseStatusCode responseStatusCode = HttpResponseStatusCode.Ok)
             : base(responseStatusCode)
         {
-            Headers.AddHeader(new HttpHeader("Content-Type", "text/html; charset=utf-8"));
-            Content = Encoding.UTF8.GetBytes(content);
+            this.Headers.AddHeader(new HttpHeader("Content-Type", "text/html; charset=utf-8"));
+            this.Content = Encoding.UTF8.GetBytes(content);
         }
-
     }
 }

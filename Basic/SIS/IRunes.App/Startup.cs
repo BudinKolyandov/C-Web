@@ -1,12 +1,7 @@
-﻿using IRunes.App.Controllers;
-using IRunes.Data;
-using SIS.HTTP.Enums;
-using SIS.HTTP.Requests;
-using SIS.HTTP.Responses;
+﻿using IRunes.Data;
 using SIS.MvcFramework;
-using SIS.MvcFramework.Result;
+using SIS.MvcFramework.DependencyContainer;
 using SIS.MvcFramework.Routing;
-using System;
 
 namespace IRunes.App
 {
@@ -20,11 +15,8 @@ namespace IRunes.App
             }
         }
 
-
-        public void ConfigureServices()
+        public void ConfigureServices(IServiceProvider serviceProvider)
         {
         }
-
-
     }
 }

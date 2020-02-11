@@ -1,8 +1,6 @@
-﻿using SIS.HTTP.Enums;
+﻿using System.Text;
+using SIS.HTTP.Enums;
 using SIS.HTTP.Headers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SIS.MvcFramework.Result
 {

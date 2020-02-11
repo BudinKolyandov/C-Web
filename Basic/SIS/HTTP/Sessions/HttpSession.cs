@@ -1,5 +1,6 @@
-﻿using SIS.HTTP.Common;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SIS.Common;
+using SIS.HTTP.Common;
 
 namespace SIS.HTTP.Sessions
 {
@@ -10,36 +11,38 @@ namespace SIS.HTTP.Sessions
         public HttpSession(string id)
         {
             this.Id = id;
+            this.IsNew = true;
             this.sessionParameters = new Dictionary<string, object>();
         }
 
-
         public string Id { get; }
 
-        public void AddParameter(string name, object parameter)
-        {
-            CoreValidator.ThrowIfNullOrEmpty(name, nameof(name));
-            CoreValidator.ThrowIfNull(parameter, nameof(parameter));
+        public bool IsNew { get; set; }
 
-            this.sessionParameters[name] = parameter;
+        public object GetParameter(string parameterName)
+        {
+            parameterName.ThrowIfNullOrEmpty(nameof(parameterName));
+            return this.sessionParameters[parameterName];
+        }
+
+        public bool ContainsParameter(string parameterName)
+        {
+            parameterName.ThrowIfNullOrEmpty(nameof(parameterName));
+
+            return this.sessionParameters.ContainsKey(parameterName);
+        }
+
+        public void AddParameter(string parameterName, object parameter)
+        {
+            parameterName.ThrowIfNullOrEmpty(nameof(parameterName));
+            parameter.ThrowIfNull(nameof(parameter));
+
+            this.sessionParameters[parameterName] = parameter;
         }
 
         public void ClearParameters()
         {
             this.sessionParameters.Clear();
-        }
-
-        public bool ContainsParameter(string name)
-        {
-            CoreValidator.ThrowIfNullOrEmpty(name, nameof(name));
-
-            return this.sessionParameters.ContainsKey(name);
-        }
-
-        public object GetParamenter(string name)
-        {
-            CoreValidator.ThrowIfNullOrEmpty(name, nameof(name));
-            return this.sessionParameters[name];
         }
     }
 }

@@ -4,13 +4,14 @@
     {
         string Id { get; }
 
-        object GetParamenter(string name);
+        bool IsNew { get; set; }
 
-        bool ContainsParameter(string name);
+        object GetParameter(string parameterName);
 
-        void AddParameter(string name, object parameter);
+        bool ContainsParameter(string parameterName);
+
+        void AddParameter(string parameterName, object parameter);
 
         void ClearParameters();
-
     }
 }
